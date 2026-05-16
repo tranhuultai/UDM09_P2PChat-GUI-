@@ -152,14 +152,13 @@ git clone https://github.com/tranhuultai/UDM09_P2PChat-GUI-.git
 * [ ] Stress test và performance test
 * [ ] Hoàn thiện tài liệu
 * [ ] Fix bug lần cuối
-* [ ] Quay demo video
 
 ---
 
 ## 📦 Requirements
 
 ```txt
-Python 3.10+
+Python 3.13+
 cryptography
 customtkinter
 ```
