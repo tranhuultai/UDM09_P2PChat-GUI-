@@ -1,0 +1,5 @@
+#GUI framework
+customtkinter
+
+# Encryption
+cryptography
