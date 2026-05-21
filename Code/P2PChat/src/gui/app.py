@@ -1,6 +1,5 @@
 import customtkinter as ctk
-#from gui.validation import validate_ip, validate_port
-from validation import validate_ip, validate_port #TODO: Delete this line later when the above line is uncommented.
+from gui.validation import validate_ip, validate_port
 class ChatApp(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
