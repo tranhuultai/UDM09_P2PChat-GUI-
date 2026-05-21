@@ -1,6 +1,6 @@
 import customtkinter as ctk
-
-
+#from gui.validation import validate_ip, validate_port
+from validation import validate_ip, validate_port #TODO: Delete this line later when the above line is uncommented.
 class ChatApp(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
@@ -164,6 +164,18 @@ class ChatApp(ctk.CTk):
             )
             return
 
+        if not validate_ip(ip):
+            self.add_system_message(
+                "Invalid IP address format."
+            )
+            return
+        
+        if not validate_port(port):
+            self.add_system_message(
+                "Invalid port number. Must be 1-65535."
+            )
+            return
+        
         self.add_system_message(
             f"Attempting connection to {ip}:{port}"
         )
