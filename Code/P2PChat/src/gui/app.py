@@ -210,7 +210,3 @@ class ChatApp(ctk.CTk):
 
         self.chat_box.see("end")
 
-
-if __name__ == "__main__":
-    app = ChatApp()
-    app.mainloop()
