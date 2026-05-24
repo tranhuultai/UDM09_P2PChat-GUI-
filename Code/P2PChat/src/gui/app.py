@@ -1,11 +1,19 @@
 import customtkinter as ctk
 from gui.validation import validate_ip, validate_port
+from node.core import P2PNode
 class ChatApp(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
 
+        self.node = P2PNode(
+        host="0.0.0.0",
+        port=12000 # Default port for P2P chat
+        )
+        
+        self.node.start_server()
         self.setup_window()
         self.setup_layout()
+    
 
     def setup_window(self) -> None:
         """Configure the main application window."""
