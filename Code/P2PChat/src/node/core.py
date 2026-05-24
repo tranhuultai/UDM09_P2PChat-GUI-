@@ -53,8 +53,15 @@ class P2PNode:
                 print(
                     f"[INFO] Peer connected: {address}"
                 )
-                
+
                 self.peers.append(client_socket)
+                receive_thread = threading.Thread(
+                    target=self.receive_messages,
+                    args=(client_socket,),
+                    daemon=True
+                )   
+
+                receive_thread.start()  
                 client_socket.close()
 
             except OSError:
@@ -81,10 +88,40 @@ class P2PNode:
 
             self.peers.append(peer_socket)
 
+            receive_thread = threading.Thread(
+                target=self.receive_messages,
+                args=(peer_socket,),
+                daemon=True
+            )   
+
+            receive_thread.start()  
+
         except OSError as error:
             print(
                 f"[ERROR] Failed to connect: {error}"
             )
+    
+    def receive_messages(
+        self,
+        peer_socket: socket.socket
+    ) -> None:
+        """Receive messages from a peer."""
+
+        while self.is_running:
+            try:
+                data = peer_socket.recv(1024)
+
+                if not data:
+                    break
+
+                message = data.decode()
+
+                print(
+                    f"[MESSAGE] {message}"
+                )
+
+            except OSError:
+                break
 
     def stop_server(self) -> None:
         """Stop the TCP server."""
