@@ -1,6 +1,9 @@
 import socket
 import threading
-
+from protocol import (
+    encode_message, 
+    decode_message
+)   
 
 class P2PNode:
     def __init__(
@@ -108,6 +111,7 @@ class P2PNode:
                 f"[ERROR] Failed to connect: {error}"
             )
             return False   
+        
     def receive_messages(
         self,
         peer_socket: socket.socket
@@ -116,12 +120,11 @@ class P2PNode:
 
         while self.is_running:
             try:
-                data = peer_socket.recv(1024)
+                message = decode_message(peer_socket)
 
-                if not data:
+                if message is None:
+                    self.remove_peer(peer_socket)
                     break
-
-                message = data.decode()
 
                 if self.on_message is not None:
                     self.on_message(message)
@@ -133,7 +136,20 @@ class P2PNode:
 
             except OSError:
                 break
+    
+    def remove_peer(
+        self,
+        peer_socket: socket.socket
+    ) -> None:
+        """Remove a peer from the list."""
 
+        if peer_socket in self.peers:
+            self.peers.remove(peer_socket)
+            peer_socket.close()
+            print(
+                f"[INFO] Peer disconnected."
+            )   
+            
     def send_message(
         self,
         message: str
@@ -143,7 +159,7 @@ class P2PNode:
         for peer_socket in self.peers:
             try:
                 peer_socket.sendall(
-                    message.encode()
+                    encode_message(message)
                 )
             except OSError:
                 print(
