@@ -77,7 +77,7 @@ class P2PNode:
         self,
         host: str,
         port: int
-    ) -> None:
+    ) -> bool:
         """Connect to another peer."""
 
         try:
@@ -101,12 +101,13 @@ class P2PNode:
             )   
 
             receive_thread.start()  
-
+            return True
+        
         except OSError as error:
             print(
                 f"[ERROR] Failed to connect: {error}"
             )
-    
+            return False   
     def receive_messages(
         self,
         peer_socket: socket.socket

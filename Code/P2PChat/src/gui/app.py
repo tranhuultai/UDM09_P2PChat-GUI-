@@ -189,16 +189,25 @@ class ChatApp(ctk.CTk):
             f"Attempting connection to {ip}:{port}"
         )
 
-        self.node.connect_to_peer(
+        connected = self.node.connect_to_peer(
             ip,
             int(port)
         )
+
+        if not connected:
+            self.add_system_message(
+                f"Failed to connect to {ip}:{port}"
+            )
+            return
 
         peer_address = f"{ip}:{port}"
 
         if peer_address not in self.connected_peers:
             self.connected_peers.append(peer_address)
-            self.update_peer_list() 
+            self.update_peer_list()
+            self.add_system_message(
+                f"Successfully connected to {peer_address}" 
+            )
 
     def send_message(self) -> None:
         """Handle send button events."""
@@ -206,6 +215,12 @@ class ChatApp(ctk.CTk):
         message = self.message_entry.get().strip()
 
         if not message:
+            return
+        
+        if not self.connected_peers:
+            self.add_system_message(
+                "No connected peers to send message to."
+            )
             return
 
         self.chat_box.insert(
