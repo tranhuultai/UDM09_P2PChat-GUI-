@@ -20,7 +20,7 @@ class P2PNode:
         self.on_disconnect = on_disconnect
 
         self.server_socket: socket.socket | None = None
-        self.peers: list[socket.socket] = []
+        self.peers: dict[str, socket.socket] = {}
         self.is_running = False
 
     def start_server(self) -> None:
@@ -66,7 +66,9 @@ class P2PNode:
                     f"[INFO] Peer connected: {address}"
                 )
 
-                self.peers.append(client_socket)
+                peer_address = f"{address[0]}:{address[1]}"
+                self.peers[peer_address] = client_socket
+
                 receive_thread = threading.Thread(
                     target=self.receive_messages,
                     args=(client_socket,),
@@ -97,8 +99,9 @@ class P2PNode:
                 f"[INFO] Connected to peer {host}:{port}"
             )
 
-            self.peers.append(peer_socket)
-
+            peer_address = f"{host}:{port}" 
+            self.peers[peer_address] = peer_socket
+            
             receive_thread = threading.Thread(
                 target=self.receive_messages,
                 args=(peer_socket,),
@@ -145,33 +148,42 @@ class P2PNode:
     ) -> None:
         """Remove a peer from the list."""
 
-        if peer_socket in self.peers:
-            self.peers.remove(peer_socket)
-            peer_address = str(peer_socket.getpeername())   
-            peer_socket.close()
+        peer_address = None
 
+        for address, socket_object in list(
+            self.peers.items()
+        ):
+            if socket_object == peer_socket:
+                peer_address = address
+                del self.peers[address]
+                break
+
+        peer_socket.close()
+
+        if peer_address is not None:
             print(
                 f"[INFO] Peer disconnected: {peer_address}"
-            ) 
+            )
 
             if self.on_disconnect is not None:
-                self.on_disconnect(peer_address)  
+                self.on_disconnect(peer_address) 
 
     def send_message(
         self,
-        message: str
+        message: str,
+        peer_address: str
     ) -> None:
         """Send a message to connected peers."""
 
-        for peer_socket in self.peers:
+        peer_socket = self.peers.get(peer_address)
+        
+        if peer_socket is not None:
             try:
-                peer_socket.sendall(
-                    encode_message(message)
-                )
+                message_data = encode_message(message)
+                peer_socket.sendall(message_data)
+
             except OSError:
-                print(
-                    "[ERROR] Failed to send message."
-                )
+                self.remove_peer(peer_socket)
 
     def stop_server(self) -> None:
         """Stop the TCP server."""

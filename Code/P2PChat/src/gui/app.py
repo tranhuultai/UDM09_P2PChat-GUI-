@@ -5,6 +5,7 @@ class ChatApp(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
         self.connected_peers: list[str] = []
+        self.selected_peer: str | None = None
         
         self.node = P2PNode(
         host="0.0.0.0",
@@ -132,6 +133,8 @@ class ChatApp(ctk.CTk):
             fill="both",
             expand=True
         )
+        self.peer_listbox.bind("<ButtonRelease-1>", self.select_peer)
+
 
         # Peer IP input
         self.ip_entry = ctk.CTkEntry(
@@ -252,7 +255,16 @@ class ChatApp(ctk.CTk):
 
         self.message_entry.delete(0, "end")
 
-        self.node.send_message(message)
+        if self.selected_peer is None:
+            self.add_system_message(
+            "No peer selected."
+        )
+            return
+
+        self.node.send_message(
+                message,
+            self.selected_peer
+)
 
         # TODO: Implement encrypted message transfer.
 
@@ -276,8 +288,12 @@ class ChatApp(ctk.CTk):
 
         self.chat_box.see("end")
 
-        self.node.send_message(message)
-        
+        for peer_address in self.connected_peers:
+            self.node.send_message(
+                message,
+                peer_address
+        )
+
         self.message_entry.delete(0, "end")
         
     def handle_enter(self, event) -> None:
@@ -315,6 +331,16 @@ class ChatApp(ctk.CTk):
                 "end",
                 f"{peer}\n"
             )
+
+    def select_peer(self, event) -> None:
+        """Handle peer selection in the listbox."""
+        selected_text = self.peer_listbox.get("insert linestart", "insert lineend").strip()
+
+        if selected_text:
+            self.selected_peer = selected_text
+            self.add_system_message(
+            f"Selected peer: {selected_text}"
+        )
 
     def handle_disconnect(self, peer_address: str) -> None:
         """Handle peer disconnection events."""
