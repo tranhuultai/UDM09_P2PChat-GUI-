@@ -7,7 +7,8 @@ class ChatApp(ctk.CTk):
 
         self.node = P2PNode(
         host="0.0.0.0",
-        port=12000 # Default port for P2P chat
+            port=12000,  # Default port for P2P chat
+            on_message=self.display_peer_message
         )
         
         self.node.start_server()
@@ -223,3 +224,14 @@ class ChatApp(ctk.CTk):
 
         self.chat_box.see("end")
 
+    def display_peer_message(
+        self,
+        message: str) -> None:   
+        """Display a message received from a peer."""
+
+        self.chat_box.insert(
+            "end",
+            f"Peer: {message}\n"
+        )
+
+        self.chat_box.see("end")

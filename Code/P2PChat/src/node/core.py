@@ -3,9 +3,16 @@ import threading
 
 
 class P2PNode:
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        on_message=None
+    ) -> None:
         self.host = host
         self.port = port
+
+        self.on_message = on_message
 
         self.server_socket: socket.socket | None = None
         self.peers: list[socket.socket] = []
@@ -115,9 +122,13 @@ class P2PNode:
 
                 message = data.decode()
 
-                print(
-                    f"[MESSAGE] {message}"
-                )
+                if self.on_message is not None:
+                    self.on_message(message)
+
+                else:
+                    print(
+                        f"[MESSAGE] {message}"
+                    )
 
             except OSError:
                 break
