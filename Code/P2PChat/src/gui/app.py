@@ -4,7 +4,8 @@ from node.core import P2PNode
 class ChatApp(ctk.CTk):
     def __init__(self) -> None:
         super().__init__()
-
+        self.connected_peers: list[str] = []
+        
         self.node = P2PNode(
         host="0.0.0.0",
             port=12000,  # Default port for P2P chat
@@ -193,6 +194,12 @@ class ChatApp(ctk.CTk):
             int(port)
         )
 
+        peer_address = f"{ip}:{port}"
+
+        if peer_address not in self.connected_peers:
+            self.connected_peers.append(peer_address)
+            self.update_peer_list() 
+
     def send_message(self) -> None:
         """Handle send button events."""
 
@@ -235,3 +242,14 @@ class ChatApp(ctk.CTk):
         )
 
         self.chat_box.see("end")
+
+    def update_peer_list(self) -> None:
+        """Refresh the list of connected peers in the sidebar."""
+
+        self.peer_listbox.delete("1.0", "end")
+
+        for peer in self.connected_peers:
+            self.peer_listbox.insert(
+                "end",
+                f"{peer}\n"
+            )
