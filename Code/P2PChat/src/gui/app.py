@@ -187,7 +187,10 @@ class ChatApp(ctk.CTk):
             f"Attempting connection to {ip}:{port}"
         )
 
-        # TODO: Implement TCP peer connection handling.
+        self.node.connect_to_peer(
+            ip,
+            int(port)
+        )
 
     def send_message(self) -> None:
         """Handle send button events."""

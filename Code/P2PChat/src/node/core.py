@@ -58,6 +58,32 @@ class P2PNode:
             except OSError:
                 break
 
+    def connect_to_peer(
+        self,
+        host: str,
+        port: int
+    ) -> None:
+        """Connect to another peer."""
+
+        try:
+            peer_socket = socket.socket(
+                socket.AF_INET,
+                socket.SOCK_STREAM
+            )
+
+            peer_socket.connect((host, port))
+
+            print(
+                f"[INFO] Connected to peer {host}:{port}"
+            )
+
+            peer_socket.close()
+
+        except OSError as error:
+            print(
+                f"[ERROR] Failed to connect: {error}"
+            )
+
     def stop_server(self) -> None:
         """Stop the TCP server."""
 
