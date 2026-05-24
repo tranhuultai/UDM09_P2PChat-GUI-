@@ -79,6 +79,11 @@ class ChatApp(ctk.CTk):
             sticky="ew"
         )
 
+        self.message_entry.bind(
+            "<Return>",
+            self.handle_enter
+        )
+
     def create_sidebar(self) -> None:
         """Create the peer management sidebar."""
 
@@ -236,6 +241,9 @@ class ChatApp(ctk.CTk):
         self.node.send_message(message)
 
         # TODO: Implement encrypted message transfer.
+
+    def handle_enter(self, event) -> None:
+        self.send_message()
 
     def add_system_message(self, message: str) -> None:
         """Display a system message in the chat box."""
