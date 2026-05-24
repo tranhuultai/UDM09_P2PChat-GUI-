@@ -95,14 +95,17 @@ UDM09_P2PChat-GUI-
 │           ├── main.py
 │           ├── protocol.py
 │           ├── gui/
+│           │   └── app.py
 │           └── node/
+│               └── core.py
 │
 ├── DOCX/
 ├── PPTX/
 ├── Extra/
 │
 ├── .gitignore
-└── README.md
+├── README.md
+└── requirements.txt
 ```
 
 ---
@@ -122,8 +125,8 @@ git clone https://github.com/tranhuultai/UDM09_P2PChat-GUI-.git
 * [x] Nghiên cứu mô hình P2P và cơ chế AES-128-CBC
 * [x] Setup GitHub repository
 * [x] Thiết kế cấu trúc project và giao diện GUI
-* [ ] Implement TCP connection
-* [ ] Implement handshake cơ bản
+* [x] Implement TCP connection
+* [x] Implement handshake cơ bản
 
 ---
 

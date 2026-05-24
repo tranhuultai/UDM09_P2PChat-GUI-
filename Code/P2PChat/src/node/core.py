@@ -155,6 +155,7 @@ class P2PNode:
                     )
 
             except OSError:
+                self.remove_peer(peer_socket)
                 break
     
     def remove_peer(
