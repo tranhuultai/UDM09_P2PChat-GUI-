@@ -9,7 +9,8 @@ class ChatApp(ctk.CTk):
         self.node = P2PNode(
         host="0.0.0.0",
             port=12000,  # Default port for P2P chat
-            on_message=self.display_peer_message
+            on_message=self.display_peer_message,
+            on_disconnect=self.handle_disconnect
         )
         
         self.node.start_server()
@@ -268,3 +269,19 @@ class ChatApp(ctk.CTk):
                 "end",
                 f"{peer}\n"
             )
+
+    def handle_disconnect(self, peer_address: str) -> None:
+        """Handle peer disconnection events."""
+        normalized_address = (
+            peer_address
+            .replace("(", "")
+            .replace(")", "")
+            .replace("'", "")
+            .replace(", ", ":")
+        )
+        if normalized_address in self.connected_peers:
+            self.connected_peers.remove(normalized_address)
+            self.update_peer_list()
+            self.add_system_message(
+                f"Peer disconnected: {normalized_address}"
+            )   

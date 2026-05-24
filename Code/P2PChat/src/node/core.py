@@ -10,12 +10,14 @@ class P2PNode:
         self,
         host: str,
         port: int,
-        on_message=None
+        on_message=None,
+        on_disconnect=None
     ) -> None:
         self.host = host
         self.port = port
 
         self.on_message = on_message
+        self.on_disconnect = on_disconnect
 
         self.server_socket: socket.socket | None = None
         self.peers: list[socket.socket] = []
@@ -145,11 +147,16 @@ class P2PNode:
 
         if peer_socket in self.peers:
             self.peers.remove(peer_socket)
+            peer_address = str(peer_socket.getpeername())   
             peer_socket.close()
+
             print(
-                f"[INFO] Peer disconnected."
-            )   
-            
+                f"[INFO] Peer disconnected: {peer_address}"
+            ) 
+
+            if self.on_disconnect is not None:
+                self.on_disconnect(peer_address)  
+
     def send_message(
         self,
         message: str
