@@ -209,6 +209,8 @@ class ChatApp(ctk.CTk):
 
         self.message_entry.delete(0, "end")
 
+        self.node.send_message(message)
+
         # TODO: Implement encrypted message transfer.
 
     def add_system_message(self, message: str) -> None:

@@ -123,6 +123,22 @@ class P2PNode:
             except OSError:
                 break
 
+    def send_message(
+        self,
+        message: str
+    ) -> None:
+        """Send a message to connected peers."""
+
+        for peer_socket in self.peers:
+            try:
+                peer_socket.sendall(
+                    message.encode()
+                )
+            except OSError:
+                print(
+                    "[ERROR] Failed to send message."
+                )
+
     def stop_server(self) -> None:
         """Stop the TCP server."""
 
