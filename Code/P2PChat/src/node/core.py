@@ -62,7 +62,6 @@ class P2PNode:
                 )   
 
                 receive_thread.start()  
-                client_socket.close()
 
             except OSError:
                 break
