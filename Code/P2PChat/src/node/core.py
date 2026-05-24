@@ -102,6 +102,16 @@ class P2PNode:
             peer_address = f"{host}:{port}" 
             self.peers[peer_address] = peer_socket
             
+            handshake_message = (
+                f"HELLO {self.host}:{self.port}"
+            )
+
+            message_data = encode_message(
+                handshake_message
+            )
+
+            peer_socket.sendall(message_data)
+
             receive_thread = threading.Thread(
                 target=self.receive_messages,
                 args=(peer_socket,),
@@ -131,7 +141,12 @@ class P2PNode:
                     self.remove_peer(peer_socket)
                     break
 
-                if self.on_message is not None:
+                if message.startswith("HELLO"):
+                    print(
+                        f"[HANDSHAKE] {message}"
+                    )
+
+                elif self.on_message is not None:
                     self.on_message(message)
 
                 else:
