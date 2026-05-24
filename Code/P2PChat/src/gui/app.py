@@ -71,6 +71,20 @@ class ChatApp(ctk.CTk):
             placeholder_text="Enter message..."
         )
 
+        self.broadcast_button = ctk.CTkButton(
+            self.chat_frame,
+            text="📡Broadcast",
+            command=self.broadcast_message
+        )
+
+        self.broadcast_button.grid(
+            row=1,
+            column=1,
+            padx=(5, 10),
+            pady=(5, 10),
+            sticky="ew"
+        )
+
         self.message_entry.grid(
             row=1,
             column=0,
@@ -242,6 +256,30 @@ class ChatApp(ctk.CTk):
 
         # TODO: Implement encrypted message transfer.
 
+    def broadcast_message(self) -> None:
+        """Handle broadcast button events."""
+        message = self.message_entry.get().strip()
+
+        if not message:
+            return
+        
+        if not self.connected_peers:
+            self.add_system_message(
+                "No connected peers to broadcast message to."
+            )
+            return
+
+        self.chat_box.insert(
+            "end",
+            f"You (broadcast): {message}\n"
+        )
+
+        self.chat_box.see("end")
+
+        self.node.send_message(message)
+        
+        self.message_entry.delete(0, "end")
+        
     def handle_enter(self, event) -> None:
         self.send_message()
 
