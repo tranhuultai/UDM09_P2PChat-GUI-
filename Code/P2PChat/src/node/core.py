@@ -8,6 +8,7 @@ class P2PNode:
         self.port = port
 
         self.server_socket: socket.socket | None = None
+        self.peers: list[socket.socket] = []
         self.is_running = False
 
     def start_server(self) -> None:
@@ -52,7 +53,8 @@ class P2PNode:
                 print(
                     f"[INFO] Peer connected: {address}"
                 )
-
+                
+                self.peers.append(client_socket)
                 client_socket.close()
 
             except OSError:
@@ -77,7 +79,7 @@ class P2PNode:
                 f"[INFO] Connected to peer {host}:{port}"
             )
 
-            peer_socket.close()
+            self.peers.append(peer_socket)
 
         except OSError as error:
             print(
