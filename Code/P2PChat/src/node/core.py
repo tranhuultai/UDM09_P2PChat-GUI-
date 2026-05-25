@@ -31,6 +31,8 @@ class P2PNode:
             socket.SOCK_STREAM
         )
 
+        self.server_socket.settimeout(1)
+
         self.server_socket.bind(
             (self.host, self.port)
         )
@@ -85,6 +87,9 @@ class P2PNode:
 
                 receive_thread.start()  
 
+            except socket.timeout:
+                continue
+
             except OSError:
                 break
 
@@ -100,6 +105,8 @@ class P2PNode:
                 socket.AF_INET,
                 socket.SOCK_STREAM
             )
+
+            peer_socket.settimeout(10)
 
             peer_socket.connect((host, port))
 
@@ -210,7 +217,7 @@ class P2PNode:
             print(
                 f"[INFO] Peer disconnected: {peer_address}"
             )
-            
+
             print(
                 f"[INFO] Remaining peers: {len(self.peers)}"
             )
