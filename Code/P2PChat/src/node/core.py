@@ -79,6 +79,10 @@ class P2PNode:
 
                 self.peers[peer_address] = client_socket
 
+                print(
+                    f"[INFO] Active peers: {len(self.peers)}"
+                )
+
                 receive_thread = threading.Thread(
                     target=self.receive_messages,
                     args=(client_socket,),
@@ -200,7 +204,7 @@ class P2PNode:
                     print(f"[ERROR] Receive failed: {error}")
                 self.remove_peer(peer_socket)
                 break
-            
+
     # Connection lifecycle cleanup
     def remove_peer(
         self,
