@@ -239,6 +239,18 @@ class P2PNode:
 
         self.is_running = False
 
+        for peer_socket in list(
+            self.peers.values()
+        ):
+
+            try:
+                peer_socket.close()
+
+            except OSError:
+                pass
+
+        self.peers.clear()
+
         if self.server_socket is not None:
             self.server_socket.close()
 
