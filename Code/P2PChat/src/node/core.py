@@ -99,11 +99,9 @@ class P2PNode:
 
                 break
 
-    def connect_to_peer(
-        self,
-        host: str,
-        port: int
-    ) -> bool:
+    # Networking interface
+    # Used by GUI layer
+    def connect_to_peer(self, host: str, port: int) -> bool:
         """Connect to another peer."""
 
         try:
@@ -133,6 +131,10 @@ class P2PNode:
                 return False
 
             self.peers[peer_address] = peer_socket
+
+            print(
+                f"[INFO] Active peers: {len(self.peers)}"
+            )
             
             handshake_message = (
                 f"HELLO {self.host}:{self.port}"
@@ -158,7 +160,9 @@ class P2PNode:
                 f"[ERROR] Failed to connect: {error}"
             )
             return False   
-        
+
+    # Networking receive loop
+    # Handles incoming peer messages
     def receive_messages(
         self,
         peer_socket: socket.socket
@@ -196,7 +200,8 @@ class P2PNode:
                     print(f"[ERROR] Receive failed: {error}")
                 self.remove_peer(peer_socket)
                 break
-    
+            
+    # Connection lifecycle cleanup
     def remove_peer(
         self,
         peer_socket: socket.socket
@@ -215,6 +220,9 @@ class P2PNode:
         if peer_address is not None:
             del self.peers[peer_address]
 
+            print(
+                f"[INFO] Peer removed: {peer_address}"
+            )
         try:
             peer_socket.close()
         except OSError:
@@ -232,6 +240,8 @@ class P2PNode:
             if self.on_disconnect is not None:
                 self.on_disconnect(peer_address) 
 
+    # Networking interface
+    # Used by GUI layer
     def send_message(
         self,
         message: str,
