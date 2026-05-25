@@ -10,7 +10,7 @@ class ChatApp(ctk.CTk):
         self.node = P2PNode(
         host="0.0.0.0",
             port=12000,  # Default port for P2P chat
-            on_message=self.display_peer_message,
+            on_message=self.handle_peer_message,
             on_disconnect=self.handle_disconnect
         )
         
@@ -321,6 +321,16 @@ class ChatApp(ctk.CTk):
         )
 
         self.chat_box.see("end")
+    
+    def handle_peer_message(
+        self,
+        message: str
+    ) -> None:
+
+        self.after(
+            0,
+            lambda: self.display_peer_message(message)
+        )
 
     def update_peer_list(self) -> None:
         """Refresh the list of connected peers in the sidebar."""

@@ -67,6 +67,14 @@ class P2PNode:
                 )
 
                 peer_address = f"{address[0]}:{address[1]}"
+
+                if peer_address in self.peers:
+                    print(
+                        f"[INFO] Peer already connected: {peer_address}"
+                    )
+                    client_socket.close()
+                    continue
+
                 self.peers[peer_address] = client_socket
 
                 receive_thread = threading.Thread(
@@ -154,7 +162,13 @@ class P2PNode:
                         f"[MESSAGE] {message}"
                     )
 
-            except OSError:
+            except ConnectionResetError:
+                print("[INFO] Connection reset by peer")
+                self.remove_peer(peer_socket)
+                break   
+
+            except OSError as error:
+                print(f"[ERROR] Receive failed: {error}")
                 self.remove_peer(peer_socket)
                 break
     
@@ -174,7 +188,10 @@ class P2PNode:
                 del self.peers[address]
                 break
 
-        peer_socket.close()
+        try:
+            peer_socket.close()
+        except OSError:
+            pass
 
         if peer_address is not None:
             print(
@@ -198,7 +215,12 @@ class P2PNode:
                 message_data = encode_message(message)
                 peer_socket.sendall(message_data)
 
-            except OSError:
+            except BrokenPipeError:
+                print("[INFO] Peer disconnected")
+                self.remove_peer(peer_socket)
+
+            except OSError as error:
+                print(f"[ERROR] Send failed: {error}")
                 self.remove_peer(peer_socket)
 
     def stop_server(self) -> None:
