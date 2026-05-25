@@ -31,6 +31,8 @@ class P2PNode:
             socket.SOCK_STREAM
         )
 
+        self.server_socket.settimeout(1)
+
         self.server_socket.bind(
             (self.host, self.port)
         )
@@ -77,6 +79,10 @@ class P2PNode:
 
                 self.peers[peer_address] = client_socket
 
+                print(
+                    f"[INFO] Active peers: {len(self.peers)}"
+                )
+
                 receive_thread = threading.Thread(
                     target=self.receive_messages,
                     args=(client_socket,),
@@ -85,14 +91,21 @@ class P2PNode:
 
                 receive_thread.start()  
 
+            except socket.timeout:
+                continue
+
             except OSError:
+
+                if self.is_running:
+                    print(
+                        "[ERROR] Accept connection failed"
+                    )
+
                 break
 
-    def connect_to_peer(
-        self,
-        host: str,
-        port: int
-    ) -> bool:
+    # Networking interface
+    # Used by GUI layer
+    def connect_to_peer(self, host: str, port: int) -> bool:
         """Connect to another peer."""
 
         try:
@@ -101,6 +114,8 @@ class P2PNode:
                 socket.SOCK_STREAM
             )
 
+            peer_socket.settimeout(10)
+
             peer_socket.connect((host, port))
 
             print(
@@ -108,7 +123,22 @@ class P2PNode:
             )
 
             peer_address = f"{host}:{port}" 
+
+            if peer_address in self.peers:
+
+                print(
+                    f"[INFO] Already connected to {peer_address}"
+                )
+
+                peer_socket.close()
+
+                return False
+
             self.peers[peer_address] = peer_socket
+
+            print(
+                f"[INFO] Active peers: {len(self.peers)}"
+            )
             
             handshake_message = (
                 f"HELLO {self.host}:{self.port}"
@@ -134,7 +164,9 @@ class P2PNode:
                 f"[ERROR] Failed to connect: {error}"
             )
             return False   
-        
+
+    # Networking receive loop
+    # Handles incoming peer messages
     def receive_messages(
         self,
         peer_socket: socket.socket
@@ -168,10 +200,12 @@ class P2PNode:
                 break   
 
             except OSError as error:
-                print(f"[ERROR] Receive failed: {error}")
+                if self.is_running:
+                    print(f"[ERROR] Receive failed: {error}")
                 self.remove_peer(peer_socket)
                 break
-    
+
+    # Connection lifecycle cleanup
     def remove_peer(
         self,
         peer_socket: socket.socket
@@ -185,9 +219,14 @@ class P2PNode:
         ):
             if socket_object == peer_socket:
                 peer_address = address
-                del self.peers[address]
                 break
 
+        if peer_address is not None:
+            del self.peers[peer_address]
+
+            print(
+                f"[INFO] Peer removed: {peer_address}"
+            )
         try:
             peer_socket.close()
         except OSError:
@@ -198,9 +237,15 @@ class P2PNode:
                 f"[INFO] Peer disconnected: {peer_address}"
             )
 
+            print(
+                f"[INFO] Remaining peers: {len(self.peers)}"
+            )
+
             if self.on_disconnect is not None:
                 self.on_disconnect(peer_address) 
 
+    # Networking interface
+    # Used by GUI layer
     def send_message(
         self,
         message: str,
@@ -227,6 +272,18 @@ class P2PNode:
         """Stop the TCP server."""
 
         self.is_running = False
+
+        for peer_socket in list(
+            self.peers.values()
+        ):
+
+            try:
+                peer_socket.close()
+
+            except OSError:
+                pass
+
+        self.peers.clear()
 
         if self.server_socket is not None:
             self.server_socket.close()
