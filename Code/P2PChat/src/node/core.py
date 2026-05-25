@@ -108,6 +108,17 @@ class P2PNode:
             )
 
             peer_address = f"{host}:{port}" 
+
+            if peer_address in self.peers:
+
+                print(
+                    f"[INFO] Already connected to {peer_address}"
+                )
+
+                peer_socket.close()
+
+                return False
+
             self.peers[peer_address] = peer_socket
             
             handshake_message = (
