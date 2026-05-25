@@ -91,6 +91,12 @@ class P2PNode:
                 continue
 
             except OSError:
+
+                if self.is_running:
+                    print(
+                        "[ERROR] Accept connection failed"
+                    )
+
                 break
 
     def connect_to_peer(
@@ -186,7 +192,8 @@ class P2PNode:
                 break   
 
             except OSError as error:
-                print(f"[ERROR] Receive failed: {error}")
+                if self.is_running:
+                    print(f"[ERROR] Receive failed: {error}")
                 self.remove_peer(peer_socket)
                 break
     
