@@ -196,8 +196,10 @@ class P2PNode:
         ):
             if socket_object == peer_socket:
                 peer_address = address
-                del self.peers[address]
                 break
+
+        if peer_address is not None:
+            del self.peers[peer_address]
 
         try:
             peer_socket.close()
@@ -207,6 +209,10 @@ class P2PNode:
         if peer_address is not None:
             print(
                 f"[INFO] Peer disconnected: {peer_address}"
+            )
+            
+            print(
+                f"[INFO] Remaining peers: {len(self.peers)}"
             )
 
             if self.on_disconnect is not None:
