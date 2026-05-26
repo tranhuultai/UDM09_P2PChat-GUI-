@@ -1,23 +1,32 @@
 HEADER_SIZE = 4
 
+import json
+import struct
+import socket
 
-def encode_message(message: str) -> bytes:
-    """Encode a message using length-prefixed framing."""
+
+def encode_message(
+    message: str | dict
+) -> bytes:
+    """Encode message with length header."""
+
+    if isinstance(message, dict):
+        message = json.dumps(message)
 
     message_bytes = message.encode()
 
     message_length = len(message_bytes)
 
-    header = message_length.to_bytes(
-        HEADER_SIZE,
-        byteorder="big"
+    header = struct.pack(
+        "!I",
+        message_length
     )
 
     return header + message_bytes
 
 
 def receive_exact(
-    peer_socket,
+    peer_socket: socket.socket,
     size: int
 ) -> bytes:
     """Receive an exact number of bytes."""
@@ -37,28 +46,48 @@ def receive_exact(
     return buffer
 
 
-def decode_message(peer_socket) -> str | None:
-    """Decode a framed message from a socket."""
+def decode_message(
+    peer_socket: socket.socket
+) -> str | dict | None:
+    """Decode message from socket."""
 
-    header = receive_exact(
-        peer_socket,
-        HEADER_SIZE
-    )
+    try:
+        header = receive_exact(
+            peer_socket,
+            HEADER_SIZE
+        )
 
-    if not header:
+        if not header:
+            return None
+
+        message_length = struct.unpack(
+            "!I",
+            header
+        )[0]
+
+        data = b""
+
+        data = receive_exact(
+            peer_socket,
+            message_length
+        )
+
+        if not data:
+            return None 
+
+
+        message = data.decode()
+
+        try:
+            parsed_message = json.loads(message)
+
+            if isinstance(parsed_message, dict):
+                return parsed_message
+            
+            return message
+
+        except json.JSONDecodeError:
+            return message
+
+    except OSError:
         return None
-
-    message_length = int.from_bytes(
-        header,
-        byteorder="big"
-    )
-
-    message_data = receive_exact(
-        peer_socket,
-        message_length
-    )
-
-    if not message_data:
-        return None
-
-    return message_data.decode()
