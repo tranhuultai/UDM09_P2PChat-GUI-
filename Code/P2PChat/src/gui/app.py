@@ -230,7 +230,7 @@ class ChatApp(ctk.CTk):
             self.connected_peers.append(peer_address)
             self.update_peer_list()
             self.add_system_message(
-                f"Successfully connected to {peer_address}" 
+                "Connection established. Waiting for peer..." 
             )
 
     def send_message(self) -> None:
@@ -290,10 +290,21 @@ class ChatApp(ctk.CTk):
         self.chat_box.see("end")
 
         for peer_address in self.connected_peers:
+
+            peer_state = self.node.peer_states.get(peer_address)
+
+            if peer_state != "active":
+
+                self.add_system_message(
+                    f"Peer not ready: {peer_address}"
+                )
+
+                continue
+
             self.node.send_message(
                 message,
                 peer_address
-        )
+            )
 
         self.message_entry.delete(0, "end")
         
@@ -312,19 +323,25 @@ class ChatApp(ctk.CTk):
 
     def display_peer_message(
         self,
-        message: str) -> None:   
+        message: str |dict ) -> None:   
         """Display a message received from a peer."""
+
+        display_message = (
+            message
+            if isinstance(message, str)
+            else str(message)
+        )
 
         self.chat_box.insert(
             "end",
-            f"Peer: {message}\n"
+            f"Peer: {display_message}\n"
         )
 
         self.chat_box.see("end")
     
     def handle_peer_message(
         self,
-        message: str
+        message: str | dict
     ) -> None:
 
         self.after(

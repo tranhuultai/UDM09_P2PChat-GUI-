@@ -10,17 +10,23 @@ class P2PNode:
         self,
         host: str,
         port: int,
+        username: str = "Anonymous",
         on_message=None,
         on_disconnect=None
     ) -> None:
         self.host = host
         self.port = port
+        self.username = username
 
         self.on_message = on_message
         self.on_disconnect = on_disconnect
 
         self.server_socket: socket.socket | None = None
         self.peers: dict[str, socket.socket] = {}
+
+        # Peer connection states
+        self.peer_states = {}
+
         self.is_running = False
 
     def start_server(self) -> None:
@@ -78,6 +84,7 @@ class P2PNode:
                     continue
 
                 self.peers[peer_address] = client_socket
+                self.peer_states[peer_address] = "pending"
 
                 print(
                     f"[INFO] Active peers: {len(self.peers)}"
@@ -86,8 +93,9 @@ class P2PNode:
                 receive_thread = threading.Thread(
                     target=self.receive_messages,
                     args=(client_socket,),
-                    daemon=True
-                )   
+                    daemon=True,
+                    name=f"ReceiveThread-{peer_address}"
+                )
 
                 receive_thread.start()  
 
@@ -135,14 +143,19 @@ class P2PNode:
                 return False
 
             self.peers[peer_address] = peer_socket
+            self.peer_states[peer_address] = "pending"
 
             print(
                 f"[INFO] Active peers: {len(self.peers)}"
             )
             
-            handshake_message = (
-                f"HELLO {self.host}:{self.port}"
-            )
+            handshake_message = {
+                "type": "handshake",
+                "username": self.username,
+                "host": self.host,
+                "port": self.port,
+                "version": "1.0"
+            }
 
             message_data = encode_message(
                 handshake_message
@@ -181,10 +194,66 @@ class P2PNode:
                     self.remove_peer(peer_socket)
                     break
 
-                if message.startswith("HELLO"):
+                if (
+                    isinstance(message, dict)
+                    and message.get("type") == "handshake"
+                ):
+                    required_fields = [
+                        "type", 
+                        "username",
+                        "host",
+                        "port",
+                        "version"
+                    ]
+
+                    if not all(field in message for field in required_fields):
+                        print(
+                            f"[WARNING] Invalid handshake packet"
+                        )
+                        self.remove_peer(peer_socket)
+                        break
+
                     print(
                         f"[HANDSHAKE] {message}"
                     )
+
+                    for address, socket_object in (
+                        self.peers.items()
+                    ):
+                        if socket_object == peer_socket:
+                            self.peer_states[address] = "active"
+                            break
+
+                    ack_message = {
+                        "type": "handshake_ack",
+                        "status": "ok"
+                    }
+
+                    ack_data = encode_message(
+                        ack_message
+                    )
+
+                    peer_socket.sendall(ack_data)
+
+                    continue
+
+                if (
+                    isinstance(message, dict)
+                    and message.get("type") == "handshake_ack"
+                ):
+
+                    print(
+                        "[INFO] Handshake completed"
+                    )
+
+                    for address, socket_object in (
+                        self.peers.items()
+                    ):
+                        if socket_object == peer_socket:
+                            self.peer_states[address] = "active"
+                            break
+
+                    continue
 
                 elif self.on_message is not None:
                     self.on_message(message)
@@ -223,6 +292,10 @@ class P2PNode:
 
         if peer_address is not None:
             del self.peers[peer_address]
+            self.peer_states.pop(
+                peer_address,
+                None
+            )
 
             print(
                 f"[INFO] Peer removed: {peer_address}"
@@ -248,12 +321,20 @@ class P2PNode:
     # Used by GUI layer
     def send_message(
         self,
-        message: str,
+        message: str | dict,
         peer_address: str
     ) -> None:
-        """Send a message to connected peers."""
+        """Send a message to a connected peers."""
 
         peer_socket = self.peers.get(peer_address)
+        if (
+            self.peer_states.get(peer_address)
+            != "active"
+        ):
+            print(
+                f"[WARNING] Peer not ready: {peer_address}"
+            )
+            return
         
         if peer_socket is not None:
             try:
@@ -284,6 +365,7 @@ class P2PNode:
                 pass
 
         self.peers.clear()
+        self.peer_states.clear()
 
         if self.server_socket is not None:
             self.server_socket.close()
