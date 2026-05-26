@@ -15,9 +15,10 @@ class ChatApp(ctk.CTk):
         )
         
         self.node.start_server()
-        self.add_system_message("P2P Node started. Waiting for connections...")
         self.setup_window()
         self.setup_layout()
+        self.add_system_message("P2P Node started. Waiting for connections...")
+        
     
 
     def setup_window(self) -> None:
